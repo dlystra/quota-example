@@ -1,0 +1,26 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: apply-devspace-quotas
+  namespace: cronjobs
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: quota-manager-sa
+          containers:
+          - name: oc-cli-container
+            image: registry.redhat.io/openshift4/ose-cli:latest
+            command: ["/bin/bash", "-c", "/scripts/apply-quotas.sh"]
+            volumeMounts:
+            - name: script-volume
+              mountPath: /scripts
+          restartPolicy: OnFailure
+          volumes:
+          - name: script-volume
+            configMap:
+              name: quota-script-cm
+              defaultMode: 0755

@@ -1,0 +1,45 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quota-script-cm
+  namespace: cronjobs
+data:
+  apply-quotas.sh: |
+    #!/bin/bash
+    set -eo pipefail
+
+    SUFFIX="devspaces"
+    EXCLUDE_PROJECT="openshift-devspaces"
+
+    echo "Starting search for projects with suffix: $SUFFIX"
+    echo "Excluding project: $EXCLUDE_PROJECT"
+
+    PROJECTS=$(oc get projects --no-headers -o custom-columns=":metadata.name" | grep "${SUFFIX}$" | grep -v "^${EXCLUDE_PROJECT}$")
+
+    if [[ -z "$PROJECTS" ]]; then
+      echo "No projects with suffix '${SUFFIX}' found (after exclusions). Exiting."
+      exit 0
+    fi
+
+    echo "Found the following target projects:"
+    echo "$PROJECTS"
+    echo "---"
+
+    for project in $PROJECTS; do
+      echo "Inspecting project: $project"
+      if oc get resourcequota cpu-memory-quota -n "$project" &>/dev/null; then
+        echo "Quota 'cpu-memory-quota' already exists in $project. Skipping."
+      else
+        echo "Applying quota 'cpu-memory-quota' to $project..."
+        oc process cpu-memory-quota-template -n cronjobs -p NAMESPACE="$project" | oc apply -f -
+        if [[ $? -eq 0 ]]; then
+            echo "Successfully applied quota to $project."
+        else
+            echo "Failed to apply quota to $project."
+        fi
+      fi
+      echo "---"
+    done
+
+    echo "Script finished."

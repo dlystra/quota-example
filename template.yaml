@@ -1,0 +1,36 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: cpu-memory-quota-template
+  namespace: cronjobs
+objects:
+- apiVersion: v1
+  kind: ResourceQuota
+  metadata:
+    name: cpu-memory-quota
+    namespace: ${NAMESPACE}
+  spec:
+    hard:
+      requests.cpu: "30"
+      requests.memory: "30Gi"
+      limits.cpu: "30"
+      limits.memory: "30Gi"
+- apiVersion: v1
+  kind: LimitRange
+  metadata:
+    name: project-resource-limits
+    namespace: ${NAMESPACE}
+  spec:
+    limits:
+    - type: Container
+      defaultRequest:
+        cpu: "50m"
+        memory: "64Mi"
+      default:
+        cpu: "100m"
+        memory: "128Mi"
+parameters:
+- name: NAMESPACE
+  description: "The target namespace for the quota"
+  required: true
