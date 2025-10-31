@@ -1,0 +1,25 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: limitrange-template
+  namespace: cronjobs
+objects:
+- apiVersion: v1
+  kind: LimitRange
+  metadata:
+    name: project-resource-limits
+    namespace: ${NAMESPACE}
+  spec:
+    limits:
+    - type: Container
+      defaultRequest:
+        cpu: "50m"
+        memory: "64Mi"
+      default:
+        cpu: "100m"
+        memory: "128Mi"
+parameters:
+- name: NAMESPACE
+  description: "The target namespace for the quota"
+  required: true

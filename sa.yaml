@@ -20,7 +20,7 @@ rules:
   resources: ["namespaces", "projects"]
   verbs: ["get", "list"]
 - apiGroups: [""]
-  resources: ["resourcequotas"]
+  resources: ["resourcequotas", "limitranges"]
   verbs: ["get", "create"]
 - apiGroups: ["template.openshift.io"]
   resources: ["templates"]
